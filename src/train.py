@@ -33,8 +33,8 @@ def main():
     if len(np.unique(y)) < 2:
         raise RuntimeError("Need both benign and malicious samples.")
 
-    Xtr, Xte, ytr, yte = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=args.seed
+    Xtr, Xte, ytr, yte, _, test_paths = train_test_split(
+        X, y, paths, test_size=0.2, stratify=y, random_state=args.seed
     )
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -86,6 +86,11 @@ def main():
         "offset": args.offset,
         "input_size": 1000,
         "classes": ["benign", "malicious"],
+        "test_files": [
+            str(Path(path).resolve().relative_to(Path(args.data).resolve()))
+            for path in test_paths
+        ],
+        "test_labels": yte.tolist(),
     }, args.save)
     print(f"Saved model -> {args.save}")
 

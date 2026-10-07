@@ -52,7 +52,7 @@ pip install -r requirements.txt
 
 python scripts/make_demo_data.py
 python src/train.py --data data/demo_data --epochs 1000 --offset 0 --save models/demo_model.pt
-python src/predict.py --model models/demo_model.pt --file data/demo_data/malicious/malicious_000.bin --offset 0
+python src/predict.py --model models/demo_model.pt --data data/demo_data --batch-size 256 --output predictions.csv
 
 
 For a quick smoke test, the defaults already point at the synthetic demo dataset:
@@ -60,8 +60,33 @@ For a quick smoke test, the defaults already point at the synthetic demo dataset
 bash
 python scripts/make_demo_data.py
 python src/train.py --epochs 30
-python src/predict.py
+python src/predict.py --data data/demo_data
 
+
+### Batch prediction
+
+`predict.py` can process an entire directory recursively instead of one file at a time.
+Labels are inferred from any `benign` or `malicious` parent directory, so nested datasets are supported.
+Inference is performed in batches and every prediction is written to a CSV containing the file, predicted class, probabilities, and (when available) the actual class.
+
+```bash
+# Evaluate a labelled dataset
+python src/predict.py --data data/demo_data --batch-size 256 --output predictions.csv
+
+# Predict arbitrary files without ground-truth labels
+python src/predict.py --data path/to/unlabelled/files --output predictions.csv
+
+# Predict several explicit files
+python src/predict.py --file sample1.bin sample2.bin sample3.bin
+```
+
+Useful options:
+- `--batch-size 256` controls how many files are passed through the ANN at once.
+- `--threshold 0.5` controls the malicious probability threshold.
+- `--no-print-files` suppresses per-file console output and prints only the summary.
+- `--output predictions.csv` controls the CSV output location.
+
+If the dataset contains both `benign` and `malicious` labels, the script also reports accuracy, precision, recall, AUROC, confusion matrix, and a classification report. If labels are absent, it performs prediction only.
 
 ## Important reproduction note
 
